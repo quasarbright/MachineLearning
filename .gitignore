@@ -107,5 +107,5 @@ venv.bak/
 # uncrop cifar data
 uncrop/data/*
 
-# vscode debug configs
-*.vscode/launch.json
+# vscode
+*.vscode/*

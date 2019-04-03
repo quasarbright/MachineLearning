@@ -1,0 +1,2 @@
+to uncrop an image, you can't just deconvolve the image because you don't want to change the inside of the image.
+I think a better strategy would be a model similar to an autoencoder, but keep scaling up to the desired size at the end
