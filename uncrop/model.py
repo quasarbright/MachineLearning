@@ -3,7 +3,7 @@ from torch import nn
 
 
 class UnCropper(nn.Module):
-    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=5, pool_size=2):
+    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=4, pool_size=2):
         '''
         uncropped_size and cropped_size are (height, width) tuples
         '''
@@ -15,11 +15,6 @@ class UnCropper(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=num_kernels,
                       kernel_size=kernel_size),
-            nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
-            nn.ReLU(),
-
-            nn.Conv2d(in_channels=num_kernels,
-                      out_channels=num_kernels, kernel_size=kernel_size),
             nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
             nn.ReLU(),
 
@@ -45,19 +40,14 @@ class UnCropper(nn.Module):
             nn.MaxUnpool2d(kernel_size=pool_size),
             nn.ConvTranspose2d(in_channels=num_kernels,
                                out_channels=num_kernels, kernel_size=kernel_size),
-            nn.ReLU(),
-
-            nn.MaxUnpool2d(kernel_size=pool_size),
-            nn.ConvTranspose2d(in_channels=num_kernels,
-                               out_channels=num_kernels, kernel_size=kernel_size),
             nn.ReLU()
         )
         # output is same size as original image, but has num_kernels channels instead of 3
 
         # uncrop and generate outside of the image
         # TODO make it use multiple deconv layers
-        gen_kernel_width=self.uncropped_width+1
-        gen_kernel_height=self.uncropped_width+1
+        gen_kernel_width = self.uncropped_width-self.cropped_width+1
+        gen_kernel_height = self.uncropped_height-self.cropped_height+1
         gen_kernel_size = (gen_kernel_height, gen_kernel_width)
         self.generate = nn.Sequential(
             nn.ConvTranspose2d(in_channels=num_kernels, out_channels=3,
@@ -73,8 +63,7 @@ class UnCropper(nn.Module):
         indices_all = []
         # TODO switch to explicit layer type checking
         # or make a conv layer module with conv, pool ind, and relu that returns both
-        for i in range(len(self.conv)):
-            layer = self.conv[i]
+        for layer in self.conv:
             if isinstance(layer, nn.MaxPool2d):
                 # this is a pooling layer
                 hidden, indices = layer(hidden)
@@ -84,8 +73,7 @@ class UnCropper(nn.Module):
 
         # deconvolve to original size
         restored = hidden
-        for i in range(len(self.restore)):
-            layer = self.restore[i]
+        for layer in self.restore:
             if isinstance(layer, nn.MaxUnpool2d):
                 # unpool layer
                 indices = indices_all.pop()

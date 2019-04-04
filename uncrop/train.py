@@ -3,7 +3,7 @@ from torch import nn
 from load_data import get_dataloaders
 from model import UnCropper
 from utils import device
-def train_model(crop_ratio=.8, batch_size=10, lr=.1, epochs=100):
+def train_model(crop_ratio=.8, batch_size=300, lr=.1, epochs=100):
     # cifar
     img_width, img_height = 32, 32
     img_size = (img_width, img_height)
@@ -25,9 +25,17 @@ def train_model(crop_ratio=.8, batch_size=10, lr=.1, epochs=100):
             model.zero_grad()
             img, cropped = data
             # (batch, 3, height, width)
-            uncropped = model(img)
-            # TODO flatten, do loss, backprop, print loss
-            break
+            uncropped = model(cropped)
+            assert img.shape == uncropped.shape
+            loss = loss_fn(uncropped, img)
+            loss.backward()
+            total_loss += loss.data
+            num_losses += 1
+            optimizer.step()
+        avg_loss = total_loss / num_losses
+        losses.append(avg_loss)
+        print('loss at epoch {}: {}'.format(epoch, avg_loss))
+            
 
 if __name__ == '__main__':
     train_model()
