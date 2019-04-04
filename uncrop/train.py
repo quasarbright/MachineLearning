@@ -29,4 +29,5 @@ def train_model(crop_ratio=.8, batch_size=10, lr=.1, epochs=100):
             # TODO flatten, do loss, backprop, print loss
             break
 
-train_model()
+if __name__ == '__main__':
+    train_model()

@@ -15,17 +15,17 @@ class UnCropper(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=num_kernels,
                       kernel_size=kernel_size),
-            nn.MaxPool2d(kernel_size=pool_size),
+            nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
             nn.ReLU(),
 
             nn.Conv2d(in_channels=num_kernels,
                       out_channels=num_kernels, kernel_size=kernel_size),
-            nn.MaxPool2d(kernel_size=pool_size),
+            nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
             nn.ReLU(),
 
             nn.Conv2d(in_channels=num_kernels,
                       out_channels=num_kernels, kernel_size=kernel_size),
-            nn.MaxPool2d(kernel_size=pool_size),
+            nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
             nn.ReLU()
         )
         # sigmoid for final activation just to restrict output space to [0,1] explicitly
@@ -68,10 +68,31 @@ class UnCropper(nn.Module):
         # output shape (ih-1+kh, ih-1+kw)
 
     def forward(self, img):
+        # convolve
         hidden = img
-        for layer in self.conv:
-            print(layer)
-            hidden = layer(hidden)
-        restored = self.restore(hidden)
-        generated = self.generate(hidden)
+        indices_all = []
+        # TODO switch to explicit layer type checking
+        # or make a conv layer module with conv, pool ind, and relu that returns both
+        for i in range(len(self.conv)):
+            layer = self.conv[i]
+            if isinstance(layer, nn.MaxPool2d):
+                # this is a pooling layer
+                hidden, indices = layer(hidden)
+                indices_all.append(indices)
+            else:
+                hidden = layer(hidden)
+
+        # deconvolve to original size
+        restored = hidden
+        for i in range(len(self.restore)):
+            layer = self.restore[i]
+            if isinstance(layer, nn.MaxUnpool2d):
+                # unpool layer
+                indices = indices_all.pop()
+                restored = layer(restored, indices)
+            else:
+                restored = layer(restored)
+
+        # deconvolve beyond original size
+        generated = self.generate(restored)
         return generated
