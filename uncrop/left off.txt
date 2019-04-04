@@ -1,0 +1,5 @@
+left off realizing that you can't just feed through a sequential of convs and pools nicely.
+unpooling layers take in indices, which have to be returned by a pooling layer.
+This means you need to keep track of pool indices outputs and use them later.
+You can still use a sequential, but you must loop through it manually, not calling the
+sequential directly

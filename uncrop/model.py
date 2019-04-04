@@ -3,7 +3,7 @@ from torch import nn
 
 
 class UnCropper(nn.Module):
-    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=10, pool_size=4):
+    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=5, pool_size=2):
         '''
         uncropped_size and cropped_size are (height, width) tuples
         '''
@@ -28,6 +28,7 @@ class UnCropper(nn.Module):
             nn.MaxPool2d(kernel_size=pool_size),
             nn.ReLU()
         )
+        # sigmoid for final activation just to restrict output space to [0,1] explicitly
 
         # post_conv_width = num_kernels * \
         #     (self.cropped_width - kernel_size*3 - pool_size*3 + 6)
@@ -35,7 +36,7 @@ class UnCropper(nn.Module):
         #     (self.cropped_height - kernel_size*3 - pool_size*3 + 6)
 
         # inverse 3-layer deconvolution and unpooling, with relu
-        self.deConv = nn.Sequential(
+        self.restore = nn.Sequential(
             nn.MaxUnpool2d(kernel_size=pool_size),
             nn.ConvTranspose2d(in_channels=num_kernels, out_channels=num_kernels,
                                kernel_size=kernel_size),
@@ -48,11 +49,29 @@ class UnCropper(nn.Module):
 
             nn.MaxUnpool2d(kernel_size=pool_size),
             nn.ConvTranspose2d(in_channels=num_kernels,
-                               out_channels=3, kernel_size=kernel_size),
+                               out_channels=num_kernels, kernel_size=kernel_size),
             nn.ReLU()
         )
+        # output is same size as original image, but has num_kernels channels instead of 3
+
+        # uncrop and generate outside of the image
+        # TODO make it use multiple deconv layers
+        gen_kernel_width=self.uncropped_width+1
+        gen_kernel_height=self.uncropped_width+1
+        gen_kernel_size = (gen_kernel_height, gen_kernel_width)
+        self.generate = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=num_kernels, out_channels=3,
+                               kernel_size=gen_kernel_size),
+            nn.Sigmoid(),
+            # use sigmoid to explicitly force output space to be 0 to 1
+        )
+        # output shape (ih-1+kh, ih-1+kw)
 
     def forward(self, img):
-        hidden = self.conv(img)
-        unCropped = self.deConv(hidden)
-        return unCropped
+        hidden = img
+        for layer in self.conv:
+            print(layer)
+            hidden = layer(hidden)
+        restored = self.restore(hidden)
+        generated = self.generate(hidden)
+        return generated
