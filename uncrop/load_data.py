@@ -54,8 +54,12 @@ def class_to_crop(loader, crop_ratio=default_crop_ratio):
     cropped_all = torch.cat(cropped_all)
     return uncropped_all, cropped_all
 
-trainset = class_to_crop(trainloader)
-testset = class_to_crop(testloader)
 
-trainloader = torch.utils.data.TensorDataset(*trainset)
-testloader = torch.utils.data.TensorDataset(*testset)
+def load_data(crop_ratio=default_crop_ratio):
+    trainset = class_to_crop(trainloader)
+    testset = class_to_crop(testloader)
+
+    trainloader = torch.utils.data.TensorDataset(*trainset)
+    testloader = torch.utils.data.TensorDataset(*testset)
+
+    return trainloader, testloader
