@@ -3,7 +3,7 @@ from torch import nn
 
 
 class UnCropper(nn.Module):
-    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=4, pool_size=2):
+    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=6, pool_size=2):
         '''
         uncropped_size and cropped_size are (height, width) tuples
         '''
@@ -11,16 +11,18 @@ class UnCropper(nn.Module):
         self.uncropped_width, self.uncropped_height = uncropped_size
         self.cropped_width, self.cropped_height = cropped_size
 
-        # 3 layers of convolution and pooling, with relu activation
+        # 3 layers of convolution, with relu activation
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=num_kernels,
                       kernel_size=kernel_size),
-            nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
             nn.ReLU(),
 
             nn.Conv2d(in_channels=num_kernels,
                       out_channels=num_kernels, kernel_size=kernel_size),
-            nn.MaxPool2d(kernel_size=pool_size, return_indices=True),
+            nn.ReLU(),
+
+            nn.Conv2d(in_channels=num_kernels,
+                      out_channels=num_kernels, kernel_size=kernel_size),
             nn.ReLU()
         )
         # sigmoid for final activation just to restrict output space to [0,1] explicitly
@@ -30,14 +32,16 @@ class UnCropper(nn.Module):
         # post_conv_height = num_kernels * \
         #     (self.cropped_height - kernel_size*3 - pool_size*3 + 6)
 
-        # inverse 3-layer deconvolution and unpooling, with relu
+        # inverse 3-layer deconvolution, with relu
         self.restore = nn.Sequential(
-            nn.MaxUnpool2d(kernel_size=pool_size),
             nn.ConvTranspose2d(in_channels=num_kernels, out_channels=num_kernels,
                                kernel_size=kernel_size),
             nn.ReLU(),
 
-            nn.MaxUnpool2d(kernel_size=pool_size),
+            nn.ConvTranspose2d(in_channels=num_kernels,
+                               out_channels=num_kernels, kernel_size=kernel_size),
+            nn.ReLU(),
+
             nn.ConvTranspose2d(in_channels=num_kernels,
                                out_channels=num_kernels, kernel_size=kernel_size),
             nn.ReLU()
@@ -61,6 +65,7 @@ class UnCropper(nn.Module):
         # convolve
         hidden = img
         indices_all = []
+        shapes = []
         # TODO switch to explicit layer type checking
         # or make a conv layer module with conv, pool ind, and relu that returns both
         for layer in self.conv:
@@ -80,7 +85,7 @@ class UnCropper(nn.Module):
                 restored = layer(restored, indices)
             else:
                 restored = layer(restored)
-
+        assert restored.shape[-2:] == img.shape[-2:]
         # deconvolve beyond original size
         generated = self.generate(restored)
         return generated

@@ -64,17 +64,18 @@ def class_to_crop(loader, crop_ratio=default_crop_ratio):
 def load_datasets(crop_ratio=default_crop_ratio):
     global trainloader, testloader
     trainset = class_to_crop(trainloader, crop_ratio)
+    uncropped, cropped = trainset
     testset = class_to_crop(testloader, crop_ratio)
 
     trainset = torch.utils.data.TensorDataset(*trainset)
     testset = torch.utils.data.TensorDataset(*testset)
 
-    return trainset, testset
+    return trainset, testset, uncropped.shape, cropped.shape
 
 def get_dataloaders(crop_ratio=default_crop_ratio, batch_size=500):
-    trainset, testset = load_datasets(crop_ratio)
+    trainset, testset, uncropped_shape, cropped_shape = load_datasets(crop_ratio)
     trainloader_ = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                                shuffle=True, num_workers=0)
     testloader_ = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                                shuffle=True, num_workers=0)
-    return trainloader_, testloader_
+    return trainloader_, testloader_, uncropped_shape, cropped_shape
