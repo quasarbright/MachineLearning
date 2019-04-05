@@ -3,7 +3,7 @@ from torch import nn
 from load_data import get_dataloaders
 from model import UnCropper
 from utils import device
-def train_model(crop_ratio=.8, batch_size=500, lr=.1, epochs=100):
+def train_model(crop_ratio=.8, batch_size=500, lr=.3, momentum=.9, epochs=100):
     # cifar
     print("loading data")
     trainloader, testloader, uncropped_shape, cropped_shape = get_dataloaders(crop_ratio, batch_size)
@@ -15,7 +15,7 @@ def train_model(crop_ratio=.8, batch_size=500, lr=.1, epochs=100):
 
     model = UnCropper(img_size, cropped_size).to(device)
     loss_fn = nn.BCELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=.1)
+    optimizer = torch.optim.SGD(model.parameters(), lr=.1, momentum=.9)
 
     print("beginning training with image size {} and cropped size {}".format(img_size, cropped_size))
     losses = []
@@ -41,4 +41,4 @@ def train_model(crop_ratio=.8, batch_size=500, lr=.1, epochs=100):
             
 
 if __name__ == '__main__':
-    train_model(.85)
+    train_model(.95)
