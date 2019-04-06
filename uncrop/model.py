@@ -3,7 +3,7 @@ from torch import nn
 
 
 class UnCropper(nn.Module):
-    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=6, pool_size=2):
+    def __init__(self, uncropped_size, cropped_size, num_kernels=16, kernel_size=6, latent_dims=16):
         '''
         uncropped_size and cropped_size are (height, width) tuples
         '''
@@ -25,12 +25,17 @@ class UnCropper(nn.Module):
                       out_channels=num_kernels, kernel_size=kernel_size),
             nn.ReLU()
         )
-        # sigmoid for final activation just to restrict output space to [0,1] explicitly
+        
+        # linear latent layer
+        self.post_conv_width = (self.cropped_width - kernel_size*3 + 3)
+        self.post_conv_height = (self.cropped_height - kernel_size*3 + 3)
+        self.post_conv_flat_len = num_kernels * self.post_conv_width * self.post_conv_height
 
-        # post_conv_width = num_kernels * \
-        #     (self.cropped_width - kernel_size*3 - pool_size*3 + 6)
-        # post_conv_height = num_kernels * \
-        #     (self.cropped_height - kernel_size*3 - pool_size*3 + 6)
+        self.linear = nn.Sequential(
+            nn.Linear(self.post_conv_flat_len, latent_dims),
+            nn.Linear(latent_dims, self.post_conv_flat_len)
+        )
+
 
         # inverse 3-layer deconvolution, with relu
         self.restore = nn.Sequential(
@@ -62,30 +67,12 @@ class UnCropper(nn.Module):
         # output shape (ih-1+kh, ih-1+kw)
 
     def forward(self, img):
-        # convolve
-        hidden = img
-        indices_all = []
-        shapes = []
-        # TODO switch to explicit layer type checking
-        # or make a conv layer module with conv, pool ind, and relu that returns both
-        for layer in self.conv:
-            if isinstance(layer, nn.MaxPool2d):
-                # this is a pooling layer
-                hidden, indices = layer(hidden)
-                indices_all.append(indices)
-            else:
-                hidden = layer(hidden)
-
-        # deconvolve to original size
-        restored = hidden
-        for layer in self.restore:
-            if isinstance(layer, nn.MaxUnpool2d):
-                # unpool layer
-                indices = indices_all.pop()
-                restored = layer(restored, indices)
-            else:
-                restored = layer(restored)
-        assert restored.shape[-2:] == img.shape[-2:]
-        # deconvolve beyond original size
-        generated = self.generate(restored)
-        return generated
+        post_conv = self.conv(img)
+        batch_size, post_conv_channels, post_conv_height, post_conv_width = post_conv.shape
+        post_conv_flat = post_conv.view(batch_size, post_conv_channels*post_conv_height*post_conv_width) # flatten out the convolved image
+        post_linear = self.linear(post_conv_flat)
+        post_linear_reshaped = post_linear.view(
+            batch_size, post_conv_channels, post_conv_height, post_conv_width)
+        post_restore = self.restore(post_linear_reshaped)
+        post_generate = self.generate(post_restore)
+        return post_generate
