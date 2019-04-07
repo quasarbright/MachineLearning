@@ -106,6 +106,8 @@ venv.bak/
 # --------------------------------------------------------------------------------
 # uncrop cifar data
 uncrop/data/*
+# autoencoder cifar data
+conv_autoencoder/data/*
 
 # vscode
 *.vscode*
