@@ -41,4 +41,5 @@ def show_examples(model, num_examples=5):
 
 if __name__ == '__main__':
     model = load_model('model1')
+    model.eval()
     show_examples(model)

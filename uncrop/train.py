@@ -8,7 +8,8 @@ from utils import *
 from evaluate import show_examples
 
 
-def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, num_kernels=32, kernel_size=8):
+def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, num_kernels=32, kernel_size=8, plot=True):
+    config = locals()
     # cifar
     print("loading data")
     trainloader, testloader, uncropped_shape, cropped_shape = get_dataloaders(
@@ -21,7 +22,7 @@ def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, 
 
     model = UnCropper(crop_ratio, img_size, cropped_size,
                       num_kernels, kernel_size).to(device)
-    loss_fn = nn.BCELoss()
+    loss_fn = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=.1, momentum=.9)
 
     print("beginning training with image size {} and cropped size {}".format(
@@ -46,7 +47,7 @@ def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, 
         print('loss at epoch {}: {}'.format(epoch, avg_loss))
     print("training complete. final loss after {} epochs: {}".format(
         epochs, losses[-1]))
-    
+    plt.plot(losses)
     return model, losses
 
 def train_many(*configs):
@@ -61,7 +62,7 @@ def train_many(*configs):
     for config in configs:
         # config is a dictionary of kwargs
         print('training config: {}'.format(config))
-        model, losses = train_model(**config)
+        model, losses = train_model(**config, plot=False)
         models.append(model)
         loss_lists.append(losses)
         plt.plot(losses)
