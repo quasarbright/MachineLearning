@@ -1,12 +1,14 @@
 import torch
 from torch import nn
-from load_data import get_dataloaders
-from model import UnCropper
-from utils import device
 import matplotlib.pyplot as plt
 
+from load_data import get_dataloaders
+from model import UnCropper
+from utils import *
+from evaluate import show_examples
 
-def train_model(crop_ratio=.8, batch_size=500, lr=.3, momentum=.9, epochs=100, num_kernels=5, kernel_size=6):
+
+def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, num_kernels=32, kernel_size=8):
     # cifar
     print("loading data")
     trainloader, testloader, uncropped_shape, cropped_shape = get_dataloaders(
@@ -17,7 +19,7 @@ def train_model(crop_ratio=.8, batch_size=500, lr=.3, momentum=.9, epochs=100, n
     cropped_width, cropped_height = cropped_shape[3], cropped_shape[2]
     cropped_size = (cropped_width, cropped_height)
 
-    model = UnCropper(img_size, cropped_size,
+    model = UnCropper(crop_ratio, img_size, cropped_size,
                       num_kernels, kernel_size).to(device)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=.1, momentum=.9)
@@ -70,28 +72,30 @@ def train_many(*configs):
 
 
 if __name__ == '__main__':
-    configs = [
-        {
-            'num_kernels': 32,
-            'kernel_size': 7,
-            'crop_ratio': .95
-        },
-        {
-            'num_kernels': 32,
-            'kernel_size': 7,
-            'crop_ratio': .8
-        },
-        {
-            'num_kernels':32,
-            'kernel_size':7,
-            'crop_ratio':.95,
-            'momentum':.8,
-            'lr':.5
-        },
-        {
-            'num_kernels':64,
-            'kernel_size':7,
-            'crop_ratio':.95,
-        }
-    ]
-    train_many(*configs)
+    # configs = [
+    #     {
+    #         'num_kernels': 32,
+    #         'kernel_size': 7,
+    #         'crop_ratio': .95
+    #     },
+    #     {
+    #         'num_kernels': 32,
+    #         'kernel_size': 7,
+    #         'crop_ratio': .8
+    #     },
+    #     {
+    #         'num_kernels':32,
+    #         'kernel_size':7,
+    #         'crop_ratio':.95,
+    #         'momentum':.8,
+    #         'lr':.5
+    #     },
+    #     {
+    #         'num_kernels':64,
+    #         'kernel_size':7,
+    #         'crop_ratio':.95,
+    #     }
+    # ]
+    # train_many(*configs)
+    model, losses = train_model()
+    save_model(model, 'model1')
