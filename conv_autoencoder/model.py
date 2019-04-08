@@ -38,3 +38,14 @@ class Autoencoder(nn.Module):
         conved = self.conv(img)
         restored = self.restore(conved)
         return restored
+    
+    def lerp(self, img1, img2, r):
+        '''
+        linearly interpolate the hidden states
+        for img1 and img2 according to r
+        r in [0,1]
+        '''
+        h1 = self.conv(img1)
+        h2 = self.conv(img2)
+        interpolated = h1 * r + h2 * (1-r)
+        return self.restore(interpolated)

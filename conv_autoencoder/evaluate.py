@@ -9,7 +9,7 @@ def to_img(tensor):
     tensor = torch.clamp(tensor, 0, 1)
     return tensor
 
-def show_examples(model, num_examples=5):
+def show_reconstructions(model, num_examples=5):
     print('loading data')
     data = iter(testloader).next()
     print('data loaded')
@@ -41,7 +41,35 @@ def show_examples(model, num_examples=5):
         ax.get_xaxis().set_visible(False)
     plt.show()
 
+
+def show_lerp(model, dr=.2):
+    print('loading data')
+    data = iter(testloader).next()
+    print('data loaded')
+    imgs = data[0]
+    imgs = imgs[:2]
+    img1, img2 = imgs
+    img1 = img1.unsqueeze(0)
+    img2 = img2.unsqueeze(0)
+    # how many images of interpolation will there be?
+    num_images = int(1 // dr + 1)
+    for i in range(num_images):
+        r = i*dr
+        interpolated_image = model.lerp(img1, img2, r)
+        interpolated_image = interpolated_image.cpu().detach()
+        interpolated_image = interpolated_image.squeeze(0)
+        interpolated_image = interpolated_image.permute(1,2,0)
+
+        interpolated_image = to_img(interpolated_image)
+        ax = plt.subplot(1, num_images, i+1)
+        plt.imshow(interpolated_image.squeeze(0))
+        ax.get_yaxis().set_visible(False)
+        ax.get_xaxis().set_visible(False)
+    plt.show()
+
+
 if __name__ == '__main__':
     model = load_model('model1')
     model.eval()
-    show_examples(model)
+    # show_reconstructions(model)
+    show_lerp(model, .1)
