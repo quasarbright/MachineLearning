@@ -60,19 +60,12 @@ class UnCropper(nn.Module):
         gen_kernel_width = self.uncropped_width-self.cropped_width+1
         gen_kernel_height = self.uncropped_height-self.cropped_height+1
         gen_kernel_size = (gen_kernel_height, gen_kernel_width)
-        if self.training:
-            self.generate = nn.Sequential(
-                nn.ConvTranspose2d(in_channels=num_kernels, out_channels=3,
+        self.generate = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=num_kernels, out_channels=3,
                                 kernel_size=gen_kernel_size),
-                # no final activation because you're using bce with logits loss
-            )
-        else:
-            self.generate = nn.Sequential(
-                nn.ConvTranspose2d(in_channels=num_kernels, out_channels=3,
-                                   kernel_size=gen_kernel_size),
-                nn.Sigmoid()
-                # sigmoid to restrict output from 0 to 1
-            )
+            nn.Tanh()
+            # Tanh to restrict output from -1 to 1
+        )
         # output shape (ih-1+kh, ih-1+kw)
 
     def forward(self, img):

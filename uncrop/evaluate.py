@@ -2,6 +2,13 @@ import matplotlib.pyplot as plt
 from utils import *
 from load_data import get_dataloaders
 
+def to_img(tensor):
+    tensor = tensor + 1
+    tensor = tensor / 2
+    tensor = torch.clamp(tensor, 0, 1)
+    return tensor
+
+
 def show_examples(model, num_examples=5):
     crop_ratio = model.crop_ratio
     print('loading data')
@@ -22,19 +29,19 @@ def show_examples(model, num_examples=5):
 
         # show original image on top
         ax = plt.subplot(3, num_examples, i + 1)
-        plt.imshow(img.cpu())
+        plt.imshow(to_img(img.cpu()))
         ax.get_yaxis().set_visible(False)
         ax.get_xaxis().set_visible(False)
 
         # show cropped in the middle
         ax = plt.subplot(3, num_examples, num_examples + i + 1)
-        plt.imshow(cropped.cpu())
+        plt.imshow(to_img(cropped.cpu()))
         ax.get_yaxis().set_visible(False)
         ax.get_xaxis().set_visible(False)
 
         # show uncropped guess on the bottom
         ax = plt.subplot(3, num_examples, 2*num_examples + i + 1)
-        plt.imshow(uncropped.cpu().detach().numpy())
+        plt.imshow(to_img(uncropped.cpu().detach()))
         ax.get_yaxis().set_visible(False)
         ax.get_xaxis().set_visible(False)
     plt.show()
@@ -42,4 +49,4 @@ def show_examples(model, num_examples=5):
 if __name__ == '__main__':
     model = load_model('model1')
     model.eval()
-    show_examples(model)
+    show_examples(model, 10)

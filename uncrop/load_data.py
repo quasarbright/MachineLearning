@@ -43,34 +43,26 @@ def crop_image(img, ratio=default_crop_ratio):
     return img[:, :, u_ind:d_ind, l_ind:r_ind]
 
 
-def class_to_crop(loader, crop_ratio=default_crop_ratio):
-    uncropped_all = []
-    cropped_all = []
-    for i, data in enumerate(loader, 0):
-        img, label = data
-        cropped = crop_image(img, crop_ratio)
-        uncropped_all.append(img)
-        cropped_all.append(cropped)
-    # concatenate and normalize (pixel values from 0 to 1)
-    uncropped_all = torch.cat(uncropped_all)
-    uncropped_all = (uncropped_all + torch.ones(uncropped_all.shape)) / 2
-    uncropped_all = uncropped_all.to(device)
-    cropped_all = torch.cat(cropped_all)
-    cropped_all = (cropped_all + torch.ones(cropped_all.shape)) / 2
-    cropped_all = cropped_all.to(device)
-    return uncropped_all, cropped_all
+def class_to_crop(dataset, crop_ratio=default_crop_ratio):
+    uncropped = torch.Tensor(dataset.data)
+    uncropped = uncropped.to(device)
+    uncropped = uncropped.permute(0, 3, 1, 2)
+    uncropped = uncropped / 255
+    uncropped = uncropped * 2 - 1
+    cropped = crop_image(uncropped, crop_ratio)
+    return uncropped, cropped
 
 
 def load_datasets(crop_ratio=default_crop_ratio):
-    global trainloader, testloader
-    trainset = class_to_crop(trainloader, crop_ratio)
-    uncropped, cropped = trainset
-    testset = class_to_crop(testloader, crop_ratio)
+    global trainset, testset
+    train = class_to_crop(trainset, crop_ratio)
+    uncropped, cropped = train
+    test = class_to_crop(testset, crop_ratio)
 
-    trainset = torch.utils.data.TensorDataset(*trainset)
-    testset = torch.utils.data.TensorDataset(*testset)
+    trainset_ = torch.utils.data.TensorDataset(*train)
+    testset_ = torch.utils.data.TensorDataset(*test)
 
-    return trainset, testset, uncropped.shape, cropped.shape
+    return trainset_, testset_, uncropped.shape, cropped.shape
 
 def get_dataloaders(crop_ratio=default_crop_ratio, batch_size=500):
     trainset, testset, uncropped_shape, cropped_shape = load_datasets(crop_ratio)

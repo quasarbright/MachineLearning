@@ -8,7 +8,7 @@ from utils import *
 from evaluate import show_examples
 
 
-def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, num_kernels=32, kernel_size=8, plot=True):
+def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, num_kernels=64, kernel_size=8, plot=True):
     config = locals()
     # cifar
     print("loading data")
@@ -22,7 +22,7 @@ def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, 
 
     model = UnCropper(crop_ratio, img_size, cropped_size,
                       num_kernels, kernel_size).to(device)
-    loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=.1, momentum=.9)
 
     print("beginning training with image size {} and cropped size {}".format(
@@ -47,7 +47,9 @@ def train_model(crop_ratio=.95, batch_size=500, lr=.3, momentum=.9, epochs=100, 
         print('loss at epoch {}: {}'.format(epoch, avg_loss))
     print("training complete. final loss after {} epochs: {}".format(
         epochs, losses[-1]))
-    plt.plot(losses)
+    if plot:
+        plt.plot(losses)
+        plt.show()
     return model, losses
 
 def train_many(*configs):
@@ -98,5 +100,5 @@ if __name__ == '__main__':
     #     }
     # ]
     # train_many(*configs)
-    model, losses = train_model()
+    model, losses = train_model(crop_ratio=.8, epochs=200)
     save_model(model, 'model1')
