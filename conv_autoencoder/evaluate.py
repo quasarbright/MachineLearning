@@ -1,4 +1,7 @@
 import matplotlib.pyplot as plt
+import torch
+from torchvision.transforms import ToPILImage
+import numpy as np
 from utils import *
 from load_data import testloader
 
@@ -8,6 +11,13 @@ def to_img(tensor):
     tensor = tensor / 2
     tensor = torch.clamp(tensor, 0, 1)
     return tensor
+
+def to_pil_image(tensor):
+    f = ToPILImage()
+    img = to_img(tensor)
+    img = f(img)
+    return img
+    
 
 def show_reconstructions(model, num_examples=5):
     print('loading data')
@@ -42,7 +52,10 @@ def show_reconstructions(model, num_examples=5):
     plt.show()
 
 
-def show_lerp(model, dr=.2):
+def show_lerp(model, num_images=10):
+    '''
+    show lerp slide as gif
+    '''
     print('loading data')
     data = iter(testloader).next()
     print('data loaded')
@@ -52,24 +65,23 @@ def show_lerp(model, dr=.2):
     img1 = img1.unsqueeze(0)
     img2 = img2.unsqueeze(0)
     # how many images of interpolation will there be?
-    num_images = int(1 // dr + 1)
-    for i in range(num_images):
-        r = i*dr
+    thetas = np.linspace(0, 2*np.pi, num_images)
+    rs = np.cos(thetas)
+    frames = []
+    for r in rs:
         interpolated_image = model.lerp(img1, img2, r)
         interpolated_image = interpolated_image.cpu().detach()
         interpolated_image = interpolated_image.squeeze(0)
-        interpolated_image = interpolated_image.permute(1,2,0)
 
-        interpolated_image = to_img(interpolated_image)
-        ax = plt.subplot(1, num_images, i+1)
-        plt.imshow(interpolated_image.squeeze(0))
-        ax.get_yaxis().set_visible(False)
-        ax.get_xaxis().set_visible(False)
-    plt.show()
+        interpolated_image = to_pil_image(interpolated_image)
+        frames.append(interpolated_image)
+    frames[0].save('figures/lerp.gif', format='gif',
+                   append_images=frames[1:], save_all=True, duration=200, loop=0)
+
 
 
 if __name__ == '__main__':
     model = load_model('model1')
     model.eval()
     # show_reconstructions(model)
-    show_lerp(model, .1)
+    show_lerp(model, 10)
