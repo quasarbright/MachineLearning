@@ -6,3 +6,4 @@
 * original structure was a directory of images for each character. Each character directory contained some csv file, but I ignored that
 * these scripts flatten the character directories into one large image directory
 * find_size_bounds determines the maximum and minimum width and height across all images
+* then a script converts this to a torch dataset and saves it
