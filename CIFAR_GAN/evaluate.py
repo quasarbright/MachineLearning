@@ -40,24 +40,29 @@ def show_generated(nrows, ncols):
 
 def animated_noise():
     g = load_model('generator')
-    noise1 = get_noise(1, g.noise_size)
-    noise2 = get_noise(1, g.noise_size)
+    grid_size=4
+    noise1 = get_noise(grid_size**2, g.noise_size)
+    noise2 = get_noise(grid_size**2, g.noise_size)
     frames = 100
+    fps = 30
     imgs = g(noise1)
-    imgs = vutils.make_grid(imgs, nrow=1, normalize=True)
+    imgs = vutils.make_grid(imgs, nrow=grid_size, normalize=True)
     fig = plt.figure()
     im = plt.imshow(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
     plt.axis('off')
     def init():
+        nonlocal noise1, noise2
+        noise1 = noise2
+        noise2 = get_noise(grid_size**2, g.noise_size)
         return im,
     def animate(i):
         noise = noise1 + (i / frames) * (noise2-noise1)
         imgs = g(noise)
-        imgs = vutils.make_grid(imgs, nrow=1, normalize=True)
+        imgs = vutils.make_grid(imgs, nrow=grid_size, normalize=True)
         im.set_data(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
         return im,
     anim = matplotlib.animation.FuncAnimation(fig, animate, init_func=init,
-                                frames=frames, blit=True)
+                                frames=frames, interval=frames/fps, blit=True)
     plt.show()
 
 if __name__ == '__main__':
