@@ -111,3 +111,4 @@ conv_autoencoder/data/*
 
 # vscode
 *.vscode*
+*/data/*
