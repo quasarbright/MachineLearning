@@ -1,19 +1,18 @@
 import matplotlib.pyplot as plt
+import matplotlib.animation
 import torch
-import torch.distributions
 from torchvision.transforms import ToPILImage
+import torchvision.utils as vutils
 import numpy as np
 from utils import *
 # from load_data import testloader
 
-norm_dist = torch.distributions.normal.Normal(0, 1)
-
 
 def get_noise(n, size):
     '''
-    out (n, size) noise vector
+    out (n, size, 1, 1) noise vector
     '''
-    return norm_dist.sample((n, size)).to(device)
+    return torch.randn(n, size, 1, 1).to(device)
 
 def to_img(tensor):
     # tensor is -1 to 1
@@ -29,16 +28,39 @@ def to_pil_image(tensor):
     img = f(img.cpu().detach())
     return img
 
-def show_generated(n=5):
+def show_generated(nrows, ncols):
     g = load_model('generator')
-    noise = get_noise(n, g.noise_size)
+    noise = get_noise(nrows * ncols, g.noise_size)
     imgs = g(noise)
-    imgs = [img for img in imgs]
-    imgs = torch.cat(imgs, dim=2) # horizontal concatenation
-    # imgs = img[0]
-    all_imgs = to_pil_image(imgs)
-    all_imgs.show()
+    imgs = vutils.make_grid(imgs, nrow=nrows, normalize=True)
+    plt.figure(figsize=(nrows, ncols))
+    plt.axis('off')
+    plt.imshow(np.transpose(imgs.detach().cpu().numpy(), (1,2,0)))
+    plt.show()
+
+def animated_noise():
+    g = load_model('generator')
+    noise1 = get_noise(1, g.noise_size)
+    noise2 = get_noise(1, g.noise_size)
+    frames = 100
+    imgs = g(noise1)
+    imgs = vutils.make_grid(imgs, nrow=1, normalize=True)
+    fig = plt.figure()
+    im = plt.imshow(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
+    plt.axis('off')
+    def init():
+        return im,
+    def animate(i):
+        noise = noise1 + (i / frames) * (noise2-noise1)
+        imgs = g(noise)
+        imgs = vutils.make_grid(imgs, nrow=1, normalize=True)
+        im.set_data(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
+        return im,
+    anim = matplotlib.animation.FuncAnimation(fig, animate, init_func=init,
+                                frames=frames, blit=True)
+    plt.show()
 
 if __name__ == '__main__':
-    show_generated()
+    # show_generated(8,8)
+    animated_noise()
 
