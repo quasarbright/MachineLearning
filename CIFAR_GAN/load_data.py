@@ -12,6 +12,19 @@ transform = transforms.Compose([
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
+classes = (
+    'airplane',
+    'automobile',
+    'bird',
+    'cat',
+    'deer',
+    'dog',
+    'frog',
+    'horse',
+    'ship',
+    'truck',
+)
+
 cifar_trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                               download=True, transform=transform)
 

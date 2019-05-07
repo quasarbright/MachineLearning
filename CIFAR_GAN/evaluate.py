@@ -1,3 +1,4 @@
+import random
 import matplotlib.pyplot as plt
 import matplotlib.animation
 import torch
@@ -6,7 +7,18 @@ import torchvision.utils as vutils
 import numpy as np
 from utils import *
 # from load_data import testloader
-
+classes = (
+    'airplane',
+    'automobile',
+    'bird',
+    'cat',
+    'deer',
+    'dog',
+    'frog',
+    'horse',
+    'ship',
+    'truck',
+)
 
 def get_noise(n, size):
     '''
@@ -38,18 +50,21 @@ def show_generated(nrows, ncols):
     plt.imshow(np.transpose(imgs.detach().cpu().numpy(), (1,2,0)))
     plt.show()
 
-def animated_noise():
+def animated_noise(class_index):
+    class_name = classes[class_index]
     g = load_model('generator')
     grid_size=4
     noise1 = get_noise(grid_size**2, g.noise_size)
     noise2 = get_noise(grid_size**2, g.noise_size)
+    class_index = torch.full((grid_size**2,), class_index).long().to(device)
     frames = 100
     fps = 30
-    imgs = g(noise1)
+    imgs = g(noise1, class_index)
     imgs = vutils.make_grid(imgs, nrow=grid_size, normalize=True)
     fig = plt.figure()
-    im = plt.imshow(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
+    plt.title(class_name)
     plt.axis('off')
+    im = plt.imshow(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
     def init():
         nonlocal noise1, noise2
         noise1 = noise2
@@ -57,7 +72,7 @@ def animated_noise():
         return im,
     def animate(i):
         noise = noise1 + (i / frames) * (noise2-noise1)
-        imgs = g(noise)
+        imgs = g(noise, class_index)
         imgs = vutils.make_grid(imgs, nrow=grid_size, normalize=True)
         im.set_data(np.transpose(imgs.detach().cpu().numpy(), (1, 2, 0)))
         return im,
@@ -67,5 +82,10 @@ def animated_noise():
 
 if __name__ == '__main__':
     # show_generated(8,8)
-    animated_noise()
+    # g = load_model('generator')
+    # car = g.embed(torch.LongTensor([[0]]).to(device)).cpu().detach().numpy()
+    # bird = g.embed(torch.LongTensor([[1]]).to(device)).cpu().detach().numpy()
+    # truck = g.embed(torch.LongTensor([[9]]).to(device)).cpu().detach().numpy()
+    # print(car, bird, truck, sep='\n')
+    animated_noise(random.randint(0, 9))
 
