@@ -55,18 +55,20 @@ class Q(nn.Module):
         output (batch,)
         '''
         batch_size = states.shape[0]
-        ans = torch.zeros((batch_size)).long().to(device)
+        best_actions = torch.zeros((batch_size)).long().to(device)
+        best_values = torch.zeros((batch_size)).float().to(device)
         for i, state in enumerate(states):
             state = state.unsqueeze(0)
             best_action = 0
             best_value = float('-inf')
             for action in range(self.num_actions):
-                value = self.forward(state, [action]).item()
+                value = self.forward(state, [action])
                 if value > best_value:
                     best_value = value
                     best_action = action
-            ans[i] = best_action
-        return ans
+            best_actions[i] = best_action
+            best_values[i] = best_value
+        return best_actions, best_value
 
 if __name__ == '__main__':
     # example usage
