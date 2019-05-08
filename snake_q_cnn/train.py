@@ -127,4 +127,4 @@ if __name__ == '__main__':
     # train random
     # train(4, num_episodes=5, batch_size=5, num_epochs=10, exploration_rate=1)
     # train decision
-    train(4, num_episodes=100, batch_size=100, num_epochs=1, exploration_rate=.05, load=True)
+    train(4, num_episodes=100, batch_size=100, num_epochs=1, exploration_rate=.1, load=False)
