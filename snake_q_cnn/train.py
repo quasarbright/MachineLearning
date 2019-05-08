@@ -17,15 +17,14 @@ def train(num_actions, exploration_rate=.1, discount_rate=.9, lr=.0005, num_epis
     
     memory = [] # [(state, action index, next state, reward), ...]
 
-    def update(state, action_index, nextState, reward):
+    def update(state, action_index, nextState, true_value):
         value = q(state, action_index)
 
         # find best next move according to critic
         max_next_action, max_next_value = q.choose_action(nextState)
         # update q
         q.zero_grad()
-        truth = max_next_value * discount_rate + reward
-        loss = loss_fn(value, truth)
+        loss = loss_fn(value, true_value)
         loss.backward()
         optimizer.step()
         return loss
@@ -57,6 +56,9 @@ def train(num_actions, exploration_rate=.1, discount_rate=.9, lr=.0005, num_epis
         state = state_to_tensor(game.return_state())
         reward = 0
         gameOver = False
+        states = []
+        actions = []
+        nextStates = []
         rewards = []
         preds = []
 
@@ -65,24 +67,25 @@ def train(num_actions, exploration_rate=.1, discount_rate=.9, lr=.0005, num_epis
             if gameOver:
                 break
             should_explore = random.random() < exploration_rate
+            value = None
             if should_explore:
                 action = random.randint(0, num_actions-1) # python int
                 action = batch_action(action) # shape (1,) torch long tensor
+                value = q(state, [action])
+                preds.append(value)
             else:
                 action, value = q.choose_action(state) # shape (1,)
                 preds.append(value)
             reward, nextState, gameOver = game.move_player(action)
             nextState = state_to_tensor(nextState)
-            experience = (state, action, nextState, reward)
-            if not should_explore:
-                rewards.append(reward)
+            states.append(state)
+            nextStates.append(nextState)
+            actions.append(action)
+            rewards.append(reward)
             # loss = update(*experience)
             # losses.append(loss)
-            episode_memory.append(experience)
-            memory.append(experience)
             # update state
             state = nextState
-        # avg_loss = train_on_all_memory(episode_memory, episode_epochs, show=False)
         values = []  # future-discounted rewards
         losses = []
         R = 0
@@ -96,6 +99,10 @@ def train(num_actions, exploration_rate=.1, discount_rate=.9, lr=.0005, num_epis
             loss.backward()
             losses.append(loss.item())
             optimizer.step()
+        for experience in zip(states, actions, nextStates, values):
+            memory.append(experience)
+            episode_memory.append(experience)
+        mem_loss = train_on_all_memory(episode_memory, episode_epochs, show=False)
         save_model(q, 'q')
         avg_loss = sum(losses) / max(1, len(losses))
         return avg_loss, game.status()
@@ -116,8 +123,8 @@ def train(num_actions, exploration_rate=.1, discount_rate=.9, lr=.0005, num_epis
         if should_print:
             print('losses at epoch {}: \n\tepisode: {}\n\tstatus: {}'.format(epoch+1, episode_loss, status))
         # mem_loss = train_on_random_memory(batch_size)
-    # print('training on all memory')
-    # train_on_all_memory(memory, num_epochs)
+    print('training on all memory')
+    train_on_all_memory(memory, num_epochs)
 
 
     save_model(q, 'q')
@@ -125,6 +132,6 @@ def train(num_actions, exploration_rate=.1, discount_rate=.9, lr=.0005, num_epis
 
 if __name__ == '__main__':
     # train random
-    # train(4, num_episodes=5, batch_size=5, num_epochs=10, exploration_rate=1)
+    train(4, num_episodes=10, batch_size=5, num_epochs=50, exploration_rate=1)
     # train decision
-    train(4, num_episodes=100, batch_size=100, num_epochs=1, exploration_rate=.1, load=False)
+    train(4, num_episodes=100, batch_size=100, num_epochs=1, exploration_rate=.1, load=True)
