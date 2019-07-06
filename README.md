@@ -1,37 +1,14 @@
-## Welcome to GitHub Pages
-
-You can use the [editor on GitHub](https://github.com/quasarbright/MachineLearning/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/quasarbright/MachineLearning/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+---
+title: Machine Learning
+---
+Machine learning projects I've done
+# UnCropper
+This is a de-convolutional neural network that uncrops an image and generates the surrounding area. I fed it cropped images and had it guess the original. It doesn't generate unknown parts of the image very well.  
+![](https://quasarbright.github.io/MachineLearning/blob/master/uncrop/figures/25x25%20uncrop%20tanh%20mse%20guesses.png)  
+The top row is the original image, the middle is the cropped image, and the bottom is what my NN generated.  
+# Convolutional Autoencoder
+This Convolves an image to a small vector, and then deconvolves it back to the original image. If you convolve two images, average or interpolate their compressed forms as vectors, and then decompress that, you can continuously morph between images
+![](https://quasarbright.github.io/MachineLearning/blob/master/conv_autoencoder/figures/car%20animal%20lerp.png)
+# CIFAR GAN
+A neural network that generates fake images, and one that determines if an image is real or one of the other network's fakes compete with each other and get better together. The result is that the faker learns to generate images that look real to humans! That is, unless you look too closely. 
+![](https://quasarbright.github.io/MachineLearning/blob/master/CIFAR_GAN/figures/35%20epochs%208x8.png)
