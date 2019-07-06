@@ -10,5 +10,8 @@ The top row is the original image, the middle is the cropped image, and the bott
 This Convolves an image to a small vector, and then deconvolves it back to the original image. If you convolve two images, average or interpolate their compressed forms as vectors, and then decompress that, you can continuously morph between images
 ![](https://quasarbright.github.io/MachineLearning/conv_autoencoder/figures/car%20animal%20lerp.png)
 # CIFAR GAN
-A neural network that generates fake images, and one that determines if an image is real or one of the other network's fakes compete with each other and get better together. The result is that the faker learns to generate images that look real to humans! That is, unless you look too closely. 
+Generative Adversarial Networks: A neural network that generates fake images, and one that determines if an image is real or one of the other network's fakes compete with each other and get better together. The result is that the faker learns to generate images that look real to humans! That is, unless you look too closely. 
 ![](https://quasarbright.github.io/MachineLearning/CIFAR_GAN/figures/35%20epochs%208x8.png)
+# Anime Face GAN
+This is the same as CIFAR GAN, but I trained it on images of anime faces. Fake faces look a lot weirder than fake animals, planes, and cars like in the CIFAR GAN.
+![](https://quasarbright.github.io/MachineLearning/anime_face_gan/figures/50%20epochs%208x8.png)
