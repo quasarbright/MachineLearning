@@ -66,6 +66,6 @@ def animated_noise():
     plt.show()
 
 if __name__ == '__main__':
-    show_generated(8,8)
-    # animated_noise()
+    # show_generated(8,8)
+    animated_noise()
 
