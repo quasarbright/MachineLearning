@@ -15,3 +15,6 @@ Generative Adversarial Networks: A neural network that generates fake images, an
 # Anime Face GAN
 This is the same as CIFAR GAN, but I trained it on images of anime faces. Fake faces look a lot weirder than fake animals, planes, and cars like in the CIFAR GAN.
 ![](https://quasarbright.github.io/MachineLearning/anime_face_gan/figures/50%20epochs%208x8.png)
+# Snake REINFORCE NN
+I made a neural network that learns how to play snake throuh the REINFORCE algorithm. I reward the NN when it gets food, and punish it when it dies, and it learned to play pretty well. Granted, it can't think ahead very well. Note: I made this on another repository, [YLUJO](https://github.com/quasarbright/YLUJLO) with my friend Maggie Von Nortwick. There is a failed attempt of this same project on this repository, so look at the one on YLUJLO instead if you want to see how this was made. I have the functionality for actor-critic in the current model, but I shut it off because the snake task is simple enough that actor-critic over-complicates things and makes it perform worse. I also have a double Q model in a separate branch that plays even better!
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LL62tmIUtGU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
